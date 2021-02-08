@@ -1,28 +1,53 @@
-import React from "react";
-import { TextInput, Button } from "react-native";
-import { View } from "../components/Themed";
-import { StyleSheet } from 'react-native';
+import React, { FC, useContext } from "react";
+import { TextInput, Button, View, StyleSheet, ActivityIndicator } from "react-native";
+import { login, LoginResponse } from '../requests/ServerRequests';
+import LoginData from '../interfaces/LoginData';
+import { LoginContext }from '../contexts/LoginContext';
 
-const LoginScreen = () => {
-  const [username, setUsername] = React.useState("");
+enum LoginState {
+  NOT_LOGGED_IN,
+  LOGGING_IN,
+  LOGIN_FAILED,
+}
+
+const LoginScreen:FC = () => {
+  const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [loginState, setLoginState] = React.useState<LoginState>(LoginState.NOT_LOGGED_IN);
+  const loginContext: LoginData = useContext(LoginContext); 
 
-  const login = () => {
+  const loginUser = async () => {
+    setLoginState(LoginState.LOGGING_IN);
+    try {
+      const response: LoginResponse = await login(email, password);
+      loginContext.updateToken(response.token);
+      loginContext.updateUser(response.user);
+    } catch (err) {
+      console.log(err);
+      setLoginState(LoginState.LOGIN_FAILED);
+    }
+  }
+
+  const registerUser = () => {
 
   }
 
-  const register = () => {
-
+  if (loginState === LoginState.NOT_LOGGED_IN || loginState === LoginState.LOGIN_FAILED) {
+    return (
+      <View style={styles.container}>
+        <TextInput placeholder="email" onChangeText={text => setEmail(text)} enablesReturnKeyAutomatically={true}></TextInput>
+        <TextInput placeholder="password" onChangeText={text => setPassword(text)} enablesReturnKeyAutomatically={true}></TextInput>
+        <Button title="Login" onPress={loginUser}></Button>
+        <Button title="Register" onPress={registerUser}></Button>
+      </View>
+    );
+  } else {
+    return (
+      <View>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
-
-  return (
-    <View style={styles.container}>
-      <TextInput placeholder="username" onChangeText={text => setUsername(text)} enablesReturnKeyAutomatically={true}></TextInput>
-      <TextInput placeholder="password" onChangeText={text => setPassword(text)} enablesReturnKeyAutomatically={true}></TextInput>
-      <Button title="Login" onPress={login}></Button>
-      <Button title="Register" onPress={register}></Button>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -43,4 +68,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export { LoginScreen };
+export default LoginScreen;
