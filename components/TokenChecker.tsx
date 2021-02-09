@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from "react";
+import React, { FC, useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator, View } from "react-native";
 import MainScreen from '../screens/MainScreen';
@@ -69,13 +69,7 @@ export const TokenChecker: FC = () => {
         await AsyncStorage.getItem('@user_data')
       ]);
 
-      if (token !== null && userString !== null) {
-        setLoading({ token, loadingState: LoadingState.SUCEEDED });
-        const userObject:User = JSON.parse(userString);
-        setUser(userObject);
-      } else {
-        setLoading({ token: "", loadingState: LoadingState.FAILED });
-      }
+      return [token, userString];
     } catch (err) {
       console.log(err);
       setLoading({ token: "", loadingState: LoadingState.FAILED });
@@ -84,8 +78,27 @@ export const TokenChecker: FC = () => {
 
   useEffect(() => {
     if (loading.loadingState === LoadingState.NOT_STARTED) {
-      setLoading({ token: "", loadingState: LoadingState.LOADING })
-      readToken();
+      setLoading({ token: "", loadingState: LoadingState.LOADING });
+    } else if (loading.loadingState === LoadingState.LOADING) {
+      readToken()
+      .then((result) => {
+        if (!result) {
+          setLoading({ token: "", loadingState: LoadingState.FAILED });
+          return;
+        }
+        const [token, userString] = result;
+        if (token !== null && userString !== null) {
+          setLoading({ token, loadingState: LoadingState.SUCEEDED });
+          const userObject:User = JSON.parse(userString);
+          setUser(userObject);
+        } else {
+          setLoading({ token: "", loadingState: LoadingState.FAILED });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading({ token: "", loadingState: LoadingState.FAILED });
+      });
     }
   }, [loading, user]);
 
@@ -95,7 +108,7 @@ export const TokenChecker: FC = () => {
       <NavigationContainer>
         <LoginContext.Provider value={{ token: loading.token, updateToken: updateToken, user, updateUser: updateUser }}>
           <Stack.Navigator>
-            <Stack.Screen name="Main" component={MainScreen} />
+            <Stack.Screen name="Dashboard" component={MainScreen} />
           </Stack.Navigator>
         </LoginContext.Provider>
       </NavigationContainer>

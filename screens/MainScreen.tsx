@@ -1,4 +1,4 @@
-import { FC, useContext } from "react";
+import React, { FC, useContext } from "react";
 import { View, Text, Button } from 'react-native';
 import { LoginContext }from '../contexts/LoginContext';
 import LoginData from '../interfaces/LoginData';

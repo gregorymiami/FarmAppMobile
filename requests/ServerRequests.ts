@@ -4,33 +4,57 @@ const baseUrl = `http://ec2-18-218-65-79.us-east-2.compute.amazonaws.com:3050`;
 const apiUrl = '/api';
 const usersUrl = '/users';
 const usersApiUrl = `${baseUrl}${apiUrl}${usersUrl}`;
+const setCookie = "set-cookie";
 
 export interface LoginResponse {
   user: User,
   token: string,
 }
 
-export const login = (email: string, password: string): Promise<LoginResponse> => {
+export const login = (email: string, password: string, callback: (loginResponse: LoginResponse) => void, error: (error: any) => void): void => {
   const data = { email, password };
   const params = {
     body: JSON.stringify(data),
     method: "POST",
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
   };
-  return fetch(`${usersApiUrl}/login`, params)
-  .then((response) => {
-    let theString: string = JSON.stringify(response.body);
-    const userData: UserData = (JSON.parse(theString) as UserData);
-    let tokenString = response.headers.get("Cookie");
 
-    if (!tokenString) {
-      throw "error, no cookie in response.";
+  fetch(`${usersApiUrl}/login`, params)
+  .then ((response) => {
+    if (response.status !== 200) {
+      console.log(response);
+      console.log(`response status is ${response.status}`)
+      error(response);
+      return;
     }
 
-    let token = tokenString.split('=')[1];
-    let user = userData.user;
+    response.json()
+    .then((userData: UserData) => {
+      console.log(response.headers);
+      let tokenString = response.headers.get(setCookie);
+      if (!tokenString) {
+        console.log("no token string");
+        error("no token string");
+        return;
+      }
 
-    return { user, token };
-  }).catch((error) => {
-    throw JSON.stringify(error);
+      let token = tokenString.split('=')[1];
+      let user = userData.user;
+      callback({ user, token });
+      return;
+    })
+    .catch((err) => {
+      console.log(err);
+      error(err);
+      return;
+    }); 
+  })
+  .catch((err) => {
+    console.log(err);
+    error(err);
+    return;
   });
 }

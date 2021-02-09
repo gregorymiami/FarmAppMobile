@@ -14,18 +14,19 @@ const LoginScreen:FC = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loginState, setLoginState] = React.useState<LoginState>(LoginState.NOT_LOGGED_IN);
-  const loginContext: LoginData = useContext(LoginContext); 
+  const loginContext: LoginData = useContext(LoginContext);
+  const defaultEmail = "lmao4@lmao.com";
+  const defaultPassword = "Lmaolmao123";
 
-  const loginUser = async () => {
+  const loginUser = () => {
     setLoginState(LoginState.LOGGING_IN);
-    try {
-      const response: LoginResponse = await login(email, password);
-      loginContext.updateToken(response.token);
-      loginContext.updateUser(response.user);
-    } catch (err) {
-      console.log(err);
+    login(defaultEmail, defaultPassword, (loginResponse) => {
+      loginContext.updateToken(loginResponse.token);
+      loginContext.updateUser(loginResponse.user);
+    }, (error) => {
+      console.log(`login api request failed with: ${error}`);
       setLoginState(LoginState.LOGIN_FAILED);
-    }
+    });
   }
 
   const registerUser = () => {
@@ -35,8 +36,8 @@ const LoginScreen:FC = () => {
   if (loginState === LoginState.NOT_LOGGED_IN || loginState === LoginState.LOGIN_FAILED) {
     return (
       <View style={styles.container}>
-        <TextInput placeholder="email" onChangeText={text => setEmail(text)} enablesReturnKeyAutomatically={true}></TextInput>
-        <TextInput placeholder="password" onChangeText={text => setPassword(text)} enablesReturnKeyAutomatically={true}></TextInput>
+        <TextInput placeholder="email" onChangeText={text => setEmail(text)} defaultValue={"lmao4@lmao.com"} enablesReturnKeyAutomatically={true}></TextInput>
+        <TextInput placeholder="password" onChangeText={text => setPassword(text)} defaultValue={"Lmaolmao123"} enablesReturnKeyAutomatically={true}></TextInput>
         <Button title="Login" onPress={loginUser}></Button>
         <Button title="Register" onPress={registerUser}></Button>
       </View>
