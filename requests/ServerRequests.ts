@@ -57,4 +57,32 @@ export const login = (email: string, password: string, callback: (loginResponse:
     error(err);
     return;
   });
-}
+};
+
+export const logout = (token: string, callback: () => void, error: (error: any) => void): void => {
+  const params = {
+    method: "GET",
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'set-cookie': `Authorization=${token}`,
+    },
+  };
+
+  fetch(`${usersApiUrl}/logout`, params)
+  .then((response) => {
+    if (response.status !== 200) {
+      console.log(response);
+      console.log(`response status is ${response.status}`)
+      error(response);
+      return;
+    }
+    callback();
+    return;
+  })
+  .catch((err) => {
+    console.log(err);
+    error(err);
+    return;
+  });
+};
