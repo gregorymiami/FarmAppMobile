@@ -11,7 +11,7 @@ export interface LoginResponse {
   token: string,
 }
 
-export const login = (email: string, password: string, callback: (loginResponse: LoginResponse) => void, error: (error: any) => void): void => {
+export const login = async (email: string, password: string): Promise<LoginResponse> => {
   const data = { email, password };
   const params = {
     body: JSON.stringify(data),
@@ -22,44 +22,28 @@ export const login = (email: string, password: string, callback: (loginResponse:
     },
   };
 
-  fetch(`${usersApiUrl}/login`, params)
-  .then ((response) => {
+  try {
+    let response = await fetch(`${usersApiUrl}/login`, params);
     if (response.status !== 200) {
       console.log(response);
-      console.log(`response status is ${response.status}`)
-      error(response);
-      return;
+      console.log(`response status is ${response.status}`);
+      throw `Bad Response: ${response}`;
     }
-
-    response.json()
-    .then((userData: UserData) => {
-      console.log(response.headers);
-      let tokenString = response.headers.get(setCookie);
-      if (!tokenString) {
-        console.log("no token string");
-        error("no token string");
-        return;
-      }
-
-      let token = tokenString.split('=')[1];
-      let user = userData.user;
-      callback({ user, token });
-      return;
-    })
-    .catch((err) => {
-      console.log(err);
-      error(err);
-      return;
-    }); 
-  })
-  .catch((err) => {
-    console.log(err);
-    error(err);
-    return;
-  });
+    let tokenString = response.headers.get(setCookie);
+    if (!tokenString) {
+      console.log("no token string");
+      throw "no token string";
+    }
+    let token = tokenString.split('=')[1];
+    let userData: UserData = await response.json();
+    let user = userData.user;
+    return { user, token };
+  } catch(error) {
+    throw `Request Failure: ${error}`;
+  }
 };
 
-export const logout = (token: string, callback: () => void, error: (error: any) => void): void => {
+export const logout = async (token: string): Promise<void> => {
   const params = {
     method: "GET",
     headers: {
@@ -68,21 +52,15 @@ export const logout = (token: string, callback: () => void, error: (error: any) 
       'set-cookie': `Authorization=${token}`,
     },
   };
-
-  fetch(`${usersApiUrl}/logout`, params)
-  .then((response) => {
+  try {
+    let response = await fetch(`${usersApiUrl}/logout`, params);
     if (response.status !== 200) {
       console.log(response);
-      console.log(`response status is ${response.status}`)
-      error(response);
-      return;
+      console.log(`response status is ${response.status}`);
+      throw `Bad Response: ${response}`;
     }
-    callback();
     return;
-  })
-  .catch((err) => {
-    console.log(err);
-    error(err);
-    return;
-  });
+  } catch (error) {
+    throw `Request Failure: ${error}`;
+  }
 };

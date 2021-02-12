@@ -8,11 +8,14 @@ const MainScreen: FC = () => {
   const loginContext: LoginData = useContext(LoginContext);
 
   const logoutUser = () => {
-    logout(loginContext.token, () => {
+    logout(loginContext.token)
+    .then(() => {
       console.log("logout successful");
       loginContext.updateToken(null);
-    }, (error) => {
+    })
+    .catch((error) => {
       console.log(`Logout failed with ${error}`);
+      loginContext.updateToken(null);
     });
   };
 

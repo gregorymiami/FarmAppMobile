@@ -20,14 +20,16 @@ const LoginScreen:FC = () => {
 
   const loginUser = () => {
     setLoginState(LoginState.LOGGING_IN);
-    login(defaultEmail, defaultPassword, (loginResponse) => {
+    login(defaultEmail, defaultPassword)
+    .then((loginResponse: LoginResponse) => {
       loginContext.updateToken(loginResponse.token);
       loginContext.updateUser(loginResponse.user);
-    }, (error) => {
+    })
+    .catch((error) => {
       console.log(`login api request failed with: ${error}`);
       setLoginState(LoginState.LOGIN_FAILED);
     });
-  }
+  };
 
   const registerUser = () => {
 
